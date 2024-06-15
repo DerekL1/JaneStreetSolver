@@ -1,0 +1,10 @@
+/.venv
+/creator.py
+/creator2.py
+/creator4.py
+/creator5.py
+/solver2.py
+/stats.py
+/test.py
+/test.txt
+/__pycache__
