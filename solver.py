@@ -1,10 +1,11 @@
+# given a puzzle, find all the valid states and achievements in it
 # imports
 import math
 from collections import deque 
 
-# declare global constant
+# declare global constants
 global PUZZLE_LENGTH, PUZZLE_SQRT, MIN_SCORE
-PUZZLE_LENGTH = 36
+PUZZLE_LENGTH = 25
 PUZZLE_SQRT = int(math.sqrt(PUZZLE_LENGTH))
 MIN_SCORE = 165379868
 
@@ -80,7 +81,7 @@ def formatted_puzzle(puzzle):
 
 # breadth first search for the C2C achievement
 def bfs(state_list):
-    # create a bordering states dictionary
+    # create a bordering states dictionary for the states in the current puzzle
     border_lookup = {}
     borders = open("borders.txt", "r")
     for border in borders:
@@ -107,16 +108,14 @@ def bfs(state_list):
 # check the points and achievements generated from the puzzle
 def achievements(state_list):
     achievement_list = []
-    points = 0
-    m_count = 0
-    c_count = 0
+    points = m_count = c_count = 0
     for state in state_list:
         points += population_dict[state]
         if state[0] == "M":
             m_count += 1
         if state in {"COLORADO", "UTAH", "ARIZONA", "NEWMEXICO"}:
             c_count += 1
-    # points
+    # points from population counts
     achievement_list.append(points)
     # 20S: visits at least 20 states
     if len(state_list) >= 20:
@@ -203,6 +202,30 @@ def find_state(puzzle, state, unfinished_state, index, alternate):
     # if a final state is still not reached, abandon this path
     return ""
 
+# score function used for other programs
+def outside_score(puzzle):
+    global PUZZLE_LENGTH, PUZZLE_SQRT
+    PUZZLE_LENGTH = len(puzzle)
+    PUZZLE_SQRT = int(math.sqrt(PUZZLE_LENGTH))
+    set_globals(puzzle)
+    confirmed_states, raw_states = [], []
+    for state in population_dict:
+        first_letter = state[0]
+        outcome = ""
+        for index in letter_lookup[first_letter]:
+            outcome = find_state(puzzle, state, first_letter, index, True)
+            if outcome: break
+        if not outcome:
+            for index in range(PUZZLE_LENGTH):
+                if index not in letter_lookup[first_letter]:
+                    outcome = find_state(puzzle, state, puzzle[index], index, False)
+                if outcome: break
+        if outcome: 
+            raw_states.append(outcome)
+            confirmed_states.append(state)
+    return achievements(confirmed_states)
+
+# main method to allow user input for one puzzle
 def main(): 
     puzzle = input("Enter your puzzle: ")
     puzzle = validate(puzzle)
@@ -227,31 +250,6 @@ def main():
                 print(retString)
     else:
         print("Invalid puzzle entered")
-
-# score function used for other programs
-def outside_score(puzzle):
-    set_globals(puzzle)
-    confirmed_states, raw_states = [], []
-    for state in population_dict:
-        first_letter = state[0]
-        outcome = ""
-        for index in letter_lookup[first_letter]:
-            outcome = find_state(puzzle, state, first_letter, index, True)
-            if outcome: break
-        if not outcome:
-            for index in range(PUZZLE_LENGTH):
-                if index not in letter_lookup[first_letter]:
-                    outcome = find_state(puzzle, state, puzzle[index], index, False)
-                if outcome: break
-        if outcome: 
-            raw_states.append(outcome)
-            confirmed_states.append(state)
-    a_list = achievements(confirmed_states)
-    # if "CALIFORNIA" in confirmed_states:
-    #     aList[0] -= 39538223
-    if len(confirmed_states) > 30:
-        a_list[0] += 100000000
-    return a_list
 
 if __name__=="__main__": 
     main() 
